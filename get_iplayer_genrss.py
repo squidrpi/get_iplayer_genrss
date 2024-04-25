@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # import libraries
 import os
@@ -71,18 +71,18 @@ parser.add_argument("-v", "--verbose", action="store_true", help="Output verbose
 args = parser.parse_args()
 
 if args.verbose:
-	print "Parameters:"
-	print "  OutputRSSFilename - " + args.outputRSSFilename
-	print "  NumberOfPastDays - " + args.numberOfPastDays
-	print "  RssTitle - " + args.rssTitle
-	print "  RssDecription - " + args.rssDescription
-	print "  RssHTMLPageURL - " + args.rssHTMLPageURL
-	print "  RssDownloadsURL - " + args.rssDownloadsURL
-	print "  RssImageURL - " + args.rssImageURL
-	print "  RssTTL - " + args.rssTTL
-	print "  RssWebMaster = " + args.rssWebMaster
-	if args.altDownloadDir != None: print "  AltDownloadDir = " + args.altDownloadDir
-	if args.mediaType != None: print "  MediaType = " + args.mediaType
+    print ("Parameters:")
+    print(("  OutputRSSFilename - " + args.outputRSSFilename))
+    print(("  NumberOfPastDays - " + args.numberOfPastDays))
+    print(("  RssTitle - " + args.rssTitle))
+    print(("  RssDecription - " + args.rssDescription))
+    print(("  RssHTMLPageURL - " + args.rssHTMLPageURL))
+    print(("  RssDownloadsURL - " + args.rssDownloadsURL))
+    print(("  RssImageURL - " + args.rssImageURL))
+    print(("  RssTTL - " + args.rssTTL))
+    print(("  RssWebMaster = " + args.rssWebMaster))
+    if args.altDownloadDir != None: print(("  AltDownloadDir = " + args.altDownloadDir))
+    if args.mediaType != None: print(("  MediaType = " + args.mediaType))
 
 
 # podcast values
@@ -103,7 +103,7 @@ rssWebMaster = args.rssWebMaster
 
 # get_iplayer download history file location
 get_iplayerDownloadHistoryFile = os.getenv("HOME") + "/.get_iplayer/download_history"
-if args.verbose: print "Using get_iplayer download history file = " + get_iplayerDownloadHistoryFile 
+if args.verbose: print(("Using get_iplayer download history file = " + get_iplayerDownloadHistoryFile ))
 
 # - output RSS filename
 outputFilename = args.outputRSSFilename
@@ -139,94 +139,100 @@ outputFile.write("<webMaster>" + rssWebMaster + "</webMaster>\n")
 
 # go through the download history 
 for download in downloadHistory:
-	
-	# split download history into data
-	downloadData = download.split("|")
+    
+    # split download history into data
+    downloadData = download.split("|")
 
-	# apply rules to see whether download should be included?
-	includeDownload = False
+    # apply rules to see whether download should be included?
+    includeDownload = False
 
-	# get the full path of the file
-        fullPath = downloadData[dhFileName]
+    # get the full path of the file
+    fullPath = downloadData[dhFileName]
 
-	# Check whether this download should be included due to the date range
-	downloadDate = datetime.datetime.fromtimestamp(int(downloadData[dhTimeAdded]))
-	if downloadDate > fromDate:
-		includeDownload = True
-	#end if
+    # Check whether this download should be included due to the date range
+    downloadDate = datetime.datetime.fromtimestamp(int(downloadData[dhTimeAdded]))
+    if downloadDate > fromDate:
+        includeDownload = True
+    #end if
 
-	if includeDownload == True:
-		# check to see its the right media type
-		if args.mediaType != None:
-			# media types
-			mediaTypes = args.mediaType.split(",")
-			foundMediaType = False
-			for mediaType in mediaTypes: 
-				if mediaType == downloadData[dhType]: foundMediaType = True
-			if foundMediaType == False : includeDownload = False
-		# end if
-	#end if 
+    if includeDownload == True:
+        # check to see its the right media type
+        if args.mediaType != None:
+            # media types
+            mediaTypes = args.mediaType.split(",")
+            foundMediaType = False
+            for mediaType in mediaTypes: 
+                if mediaType == downloadData[dhType]: foundMediaType = True
+            if foundMediaType == False : includeDownload = False
+        # end if
+    #end if 
 
-	if includeDownload == True:
-		# Check to see whether the file exists
+    if includeDownload == True:
+        # Check to see whether the file exists
 
-		# process the file path
-		fullPathData = fullPath.split("/")
-		# find the file name
-		fileName = fullPathData[len(fullPathData)-1]
-		# split the file based on "."
-		fileNameBits = fileName.split(".")
-		# get the file extension
-		fileExtension = fileNameBits[len(fileNameBits)-1]
+        # process the file path
+        fullPathData = fullPath.split("/")
+        # find the file name
+        fileName = fullPathData[len(fullPathData)-1]
+        # split the file based on "."
+        fileNameBits = fileName.split(".")
+        # get the file extension
+        fileExtension = fileNameBits[len(fileNameBits)-1]
 
-		# Work out whether a sub directory was used as part of the download and add it to the download
-		if len(fullPathData) > 1:
-			subFolder = fullPathData[len(fullPathData)-2]
-			if subFolder == downloadData[dhName].replace(" &", "").replace(" ", "_").replace(":", "").replace("'", ""):
-				fileName = subFolder + "/" + fileName
-			#end if
-		#end if
+        # Work out whether a sub directory was used as part of the download and add it to the download
+        if len(fullPathData) > 1:
+            subFolder = fullPathData[len(fullPathData)-2]
+            if subFolder == downloadData[dhName].replace(" &", "").replace(" ", "_").replace(":", "").replace("'", ""):
+                fileName = subFolder + "/" + fileName
+            #end if
+        #end if
 
-		# try and find the file
-		if os.path.exists(fullPath) == False:
-			includeDownload = False
-			# is there is an alternative download dir
-			if args.altDownloadDir != None:
-				# alt download directories
-				altDownloadDirs = args.altDownloadDir.split(",")
+        # try and find the file
+        # Only check original location if altDownloadDir is not defined
+        includeDownload = False
+        if args.altDownloadDir == None:
+            if os.path.exists(fullPath) == False:
+                includeDownload = False
+            else:
+                includeDownload = True
+            #end if
+        #end if
 
-				for altDownloadDir in altDownloadDirs:
-					if len(altDownloadDir) > 0:
-						# tidy up parameter
-						if altDownloadDir[-1:] != "/": altDownloadDir = altDownloadDir + "/"
-						altFullPath = altDownloadDir + fileName
-						if os.path.exists(altFullPath) == True: 
-							fullPath = altFullPath
-							includeDownload = True
-					#end if
-				#end for
-			# end if
-		else:
-			includeDownload = True
-		#end if
-		if args.verbose and includeDownload == False: print "Warning: file '" + fullPath + "' in download_history doesnt exist in download location or alternatives"
-	#end if	
+        # is there an alternative download dir
+        if args.altDownloadDir != None:
+            # alt download directories
+            altDownloadDirs = args.altDownloadDir.split(",")
 
-	if includeDownload == True:
+            for altDownloadDir in altDownloadDirs:
+                if len(altDownloadDir) > 0:
+                    # tidy up parameter
+                    if altDownloadDir[-1:] != "/": altDownloadDir = altDownloadDir + "/"
+                    altFullPath = altDownloadDir + fileName
+                    if os.path.exists(altFullPath) == True: 
+                        fullPath = altFullPath
+                        includeDownload = True
+                #end if
+            #end for
+        # end if
 
-		# get the stats for the file
-		fileStat = os.stat(fullPath)
+        if args.verbose and includeDownload == False: print(("Warning: file '" + fullPath + "' in download_history doesnt exist in download location or alternatives"))
+    #end if    
 
-        	# write rss item
-        	outputFile.write("<item>\n")
-      		outputFile.write("<title>" + encodeXMLText(downloadData[dhName] + " " + downloadData[dhEpisode]) + "</title>\n")
-		outputFile.write("<description>" + encodeXMLText(downloadData[dhDescription]) + "</description>\n")
-		outputFile.write("<link>" + rssItemURL + fileName + "</link>\n")
-		outputFile.write("<guid>" + rssItemURL + fileName + "</guid>\n")
-		outputFile.write("<pubDate>" + formatDate(datetime.datetime.fromtimestamp(int(downloadData[dhTimeAdded]))) + "</pubDate>\n")
-        	outputFile.write("<enclosure url=\"" + rssItemURL + fileName + "\" length=\"" + str(fileStat[ST_SIZE]) + "\" type=\"" + getItemType(fileNameBits[len(fileNameBits)-1]) + "\" />\n")
-		outputFile.write("</item>\n")
-	#end if
+    if includeDownload == True:
+
+        # get the stats for the file
+        fileStat = os.stat(fullPath)
+
+        # write rss item
+        outputFile.write("<item>\n")
+        outputFile.write("<title>" + encodeXMLText(downloadData[dhName] + " " + downloadData[dhEpisode]) + "</title>\n")
+        outputFile.write("<description>" + encodeXMLText(downloadData[dhDescription]) + "</description>\n")
+        outputFile.write("<link>" + rssItemURL + fileName + "</link>\n")
+        outputFile.write("<guid>" + rssItemURL + fileName + "</guid>\n")
+        outputFile.write("<pubDate>" + formatDate(datetime.datetime.fromtimestamp(int(downloadData[dhTimeAdded]))) + "</pubDate>\n")
+        outputFile.write("<enclosure url=\"" + rssItemURL + fileName + "\" length=\"" + str(fileStat[ST_SIZE]) + "\" type=\"" + getItemType(fileNameBits[len(fileNameBits)-1]) + "\" />\n")
+        outputFile.write("</item>\n")
+    #end if
 
 #end for loop
 
@@ -234,4 +240,4 @@ for download in downloadHistory:
 outputFile.write("</channel>\n")
 outputFile.write("</rss>")
 outputFile.close()
-print "RSS/podcast create : " + outputFilename
+print(("RSS/podcast create : " + outputFilename))
